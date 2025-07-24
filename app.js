@@ -27,6 +27,7 @@ app.use(methodOverride("_method"));
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
+const ExpressError = require("./utils/ExpressError.js");
 
 const dbUrl = process.env.ATLUSTDB_URL;
 main()
@@ -98,10 +99,14 @@ app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 
 // Error handling middleware
+app.use("/" ,(req,res,next)=>{
+  throw new ExpressError(400,"please click on icon or explore button to visit site");
+})
 app.use((err, req, res, next) => {
   let { statusCode, message } = err;
   res.render("./listings/error.ejs", { message });
 });
+
 app.listen(8080, () => {
   console.log("Server is running on port 8080");
 });
