@@ -99,9 +99,10 @@ app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 
 // Error handling middleware
-// app.use("/" ,(req,res,next)=>{
-//   throw new ExpressError(400,"please click on icon or explore button to visit site");
-// })
+app.use("/" ,(req,res,next)=>{
+  throw new ExpressError(400,"please click on icon or explore button to visit site");
+  next();
+})
 app.use((err, req, res, next) => {
   let { statusCode, message } = err;
   res.render("./listings/error.ejs", { message });
