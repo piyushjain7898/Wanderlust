@@ -102,3 +102,10 @@ footer{
 .btns{
     display: flex;
 }
+
+/* Ensure body content is pushed down */
+.navbar-collapse {
+  background-color: white; /* or match your navbar's background */
+  z-index: 1; /* keeps it above content, but below modals if any */
+}
+
