@@ -30,20 +30,36 @@ const userRouter = require("./routes/user.js");
 const ExpressError = require("./utils/ExpressError.js");
 
 const dbUrl = process.env.ATLUSTDB_URL;
-main()
-  .then(() => {
-    console.log("connected to db");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
 
 async function main() {
-  await mongoose.connect(dbUrl);
+  try {
+    await mongoose.connect(dbUrl);
+    console.log("Connected to remote MongoDB (Atlas)");
+  } catch (err) {
+    console.error("Failed to connect to Atlas:", err.message);
+    console.log("Attempting fallback to local MongoDB at mongodb://127.0.0.1:27017/wanderlust");
+    try {
+      await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust");
+      console.log("Connected to local MongoDB");
+    } catch (localErr) {
+      console.error("Failed to connect to local MongoDB:", localErr.message);
+      throw localErr;
+    }
+  }
 }
 
+main()
+  .then(() => {
+    console.log("Database connection established");
+  })
+  .catch((err) => {
+    console.error("Database connection error:", err);
+    process.exit(1);
+  });
+
+// Use a local DB for session store to avoid connect-mongo trying Atlas early
 const store = MongoStore.create({
-  mongoUrl: dbUrl,
+  mongoUrl: process.env.SESSION_DB_URL || "mongodb://127.0.0.1:27017/wanderlust",
   crypto: {
     secret: process.env.SECRET,
   },
@@ -58,8 +74,8 @@ const sessionOptions = {
   secret: process.env.SECRET,
   resave: false,
   saveUninitialized: false,
-  Cookie: {
-    expires: Date.now() + 7 + 24 * 60 * 60 * 1000,
+  cookie: {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
   },
